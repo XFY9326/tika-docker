@@ -30,6 +30,8 @@ ENV NEAREST_TIKA_SERVER_URL="https://dlcdn.apache.org/tika/${TIKA_VERSION}/tika-
     ARCHIVE_TIKA_SERVER_ASC_URL="https://archive.apache.org/dist/tika/${TIKA_VERSION}/tika-server-standard-${TIKA_VERSION}.jar.asc" \
     TIKA_VERSION=$TIKA_VERSION
 
+COPY ./apt-mirror/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
+
 RUN set -eux \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
@@ -54,6 +56,9 @@ FROM base AS runtime
 # must reference uid_gid
 ARG UID_GID
 ARG JRE='openjdk-21-jre-headless'
+
+COPY ./apt-mirror/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
+
 RUN set -eux \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \

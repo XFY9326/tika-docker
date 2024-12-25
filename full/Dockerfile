@@ -29,6 +29,8 @@ ENV NEAREST_TIKA_SERVER_URL="https://dlcdn.apache.org/tika/${TIKA_VERSION}/tika-
     ARCHIVE_TIKA_SERVER_ASC_URL="https://archive.apache.org/dist/tika/${TIKA_VERSION}/tika-server-standard-${TIKA_VERSION}.jar.asc" \
     TIKA_VERSION=$TIKA_VERSION
 
+COPY ./apt-mirror/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
+
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get -y install gnupg2 wget ca-certificates \
     && wget -t 10 --max-redirect 1 --retry-connrefused -qO- https://downloads.apache.org/tika/KEYS | gpg --import \
     && wget -t 10 --max-redirect 1 --retry-connrefused $NEAREST_TIKA_SERVER_URL -O /tika-server-standard-${TIKA_VERSION}.jar || rm /tika-server-standard-${TIKA_VERSION}.jar \
@@ -45,6 +47,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get -y install gnupg2 w
 FROM base AS runtime
 ARG UID_GID
 ARG JRE='openjdk-21-jre-headless'
+
+COPY ./apt-mirror/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
+
 RUN set -eux \
     && apt-get update \
     && apt-get install --yes --no-install-recommends gnupg2 software-properties-common \

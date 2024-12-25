@@ -6,10 +6,7 @@ The images create a functional Apache Tika Server instance that contains the lat
 
 There is a minimal version, which contains only Apache Tika and it's core dependencies, and a full version, which also includes dependencies for the GDAL and Tesseract OCR parsers. To balance showing functionality versus the size of the full image, this file currently installs the language packs for the following languages:
 * English
-* French
-* German
-* Italian
-* Spanish.
+* Chinese.
 
 To install more languages simply update the apt-get command to include the package containing the language you required, or include your own custom packs using an ADD command.
 
