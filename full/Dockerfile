@@ -15,7 +15,19 @@
 # the subsequent stages -- see TIKA-3912
 ARG UID_GID="35002:35002"
 
-FROM ubuntu:oracular AS base
+FROM ubuntu:latest AS base
+
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|http://mirrors.tuna.tsinghua.edu.cn/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources \
+    && sed -i 's|http://security.ubuntu.com/ubuntu|http://mirrors.tuna.tsinghua.edu.cn/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 FROM base AS fetch_tika
 
@@ -28,8 +40,6 @@ ENV NEAREST_TIKA_SERVER_URL="https://dlcdn.apache.org/tika/${TIKA_VERSION}/tika-
     DEFAULT_TIKA_SERVER_ASC_URL="https://downloads.apache.org/tika/${TIKA_VERSION}/tika-server-standard-${TIKA_VERSION}.jar.asc" \
     ARCHIVE_TIKA_SERVER_ASC_URL="https://archive.apache.org/dist/tika/${TIKA_VERSION}/tika-server-standard-${TIKA_VERSION}.jar.asc" \
     TIKA_VERSION=$TIKA_VERSION
-
-COPY ./apt-mirror/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get -y install gnupg2 wget ca-certificates \
     && wget -t 10 --max-redirect 1 --retry-connrefused -qO- https://downloads.apache.org/tika/KEYS | gpg --import \
@@ -48,25 +58,23 @@ FROM base AS runtime
 ARG UID_GID
 ARG JRE='openjdk-21-jre-headless'
 
-COPY ./apt-mirror/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
-
 RUN set -eux \
     && apt-get update \
     && apt-get install --yes --no-install-recommends gnupg2 software-properties-common \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends $JRE \
-        gdal-bin \
-        tesseract-ocr \
-        tesseract-ocr-eng \
-        tesseract-ocr-chi-sim \
+    gdal-bin \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    tesseract-ocr-chi-sim \
     && echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections \
     && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
-        xfonts-utils \
-        fonts-freefont-ttf \
-        fonts-liberation \
-        ttf-mscorefonts-installer \
-        wget \
-        cabextract \
+    xfonts-utils \
+    fonts-freefont-ttf \
+    fonts-liberation \
+    ttf-mscorefonts-installer \
+    wget \
+    cabextract \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 ARG TIKA_VERSION

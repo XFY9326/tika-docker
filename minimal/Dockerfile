@@ -16,7 +16,19 @@
 # the subsequent stages -- see TIKA-3912
 ARG UID_GID="35002:35002"
 
-FROM ubuntu:oracular AS base
+FROM ubuntu:latest AS base
+
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|http://mirrors.tuna.tsinghua.edu.cn/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources \
+    && sed -i 's|http://security.ubuntu.com/ubuntu|http://mirrors.tuna.tsinghua.edu.cn/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 FROM base AS fetch_tika
 
@@ -29,8 +41,6 @@ ENV NEAREST_TIKA_SERVER_URL="https://dlcdn.apache.org/tika/${TIKA_VERSION}/tika-
     DEFAULT_TIKA_SERVER_ASC_URL="https://downloads.apache.org/tika/${TIKA_VERSION}/tika-server-standard-${TIKA_VERSION}.jar.asc" \
     ARCHIVE_TIKA_SERVER_ASC_URL="https://archive.apache.org/dist/tika/${TIKA_VERSION}/tika-server-standard-${TIKA_VERSION}.jar.asc" \
     TIKA_VERSION=$TIKA_VERSION
-
-COPY ./apt-mirror/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
 
 RUN set -eux \
     && apt-get update \
@@ -56,8 +66,6 @@ FROM base AS runtime
 # must reference uid_gid
 ARG UID_GID
 ARG JRE='openjdk-21-jre-headless'
-
-COPY ./apt-mirror/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
 
 RUN set -eux \
     && apt-get update \
